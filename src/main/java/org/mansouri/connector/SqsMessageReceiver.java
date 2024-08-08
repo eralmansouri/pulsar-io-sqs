@@ -2,7 +2,10 @@ package org.mansouri.connector;
 
 import org.apache.pulsar.functions.api.Record;
 import org.apache.pulsar.io.aws.AbstractAwsConnector;
+import org.apache.pulsar.io.aws.AwsCredentialProviderPlugin;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
@@ -13,19 +16,18 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 @Slf4j
-public class SQSMessageReceiver extends AbstractAwsConnector {
-    private final SQSSourceConfig config;
+public class SqsMessageReceiver extends AbstractAwsConnector {
+    private final SqsSourceConfig config;
     private final Consumer<Record<String>> consumeFunction;
     private final ExecutorService executorService;
     private volatile boolean running;
     private final SqsClient sqsClient;
 
-    public SQSMessageReceiver(SQSSourceConfig config, Consumer<Record<String>> consumeFunction) {
+    public SqsMessageReceiver(SqsSourceConfig config, Consumer<Record<String>> consumeFunction) {
         this.config = config;
         this.consumeFunction = consumeFunction;
         this.executorService = Executors.newSingleThreadExecutor();
-        this.sqsClient = config.createSqsClient(
-            createCredentialProvider(config.getAwsCredentialPluginName(), config.getAwsCredentialPluginParam()));
+        this.sqsClient = createSqsClient();
     }
 
     public void start() {
@@ -64,6 +66,19 @@ public class SQSMessageReceiver extends AbstractAwsConnector {
 
     private void consume(Message message) {
         log.info("Consuming message. Id: {}", message.messageId());
-        consumeFunction.accept(new SQSRecord(config.getQueueName(), message));
+        consumeFunction.accept(new SqsRecord(config.getQueueName(), message));
+    }
+
+    private AwsCredentialsProvider createV2CredentialProvider() {
+        AwsCredentialProviderPlugin credPlugin =
+            createCredentialProvider(config.getAwsCredentialPluginName(), config.getAwsCredentialPluginParam());
+        return credPlugin.getV2CredentialsProvider();
+    }
+
+    private SqsClient createSqsClient() {
+        return SqsClient.builder()
+            .credentialsProvider(createV2CredentialProvider())
+            .region(Region.of(config.getRegion()))
+            .build();
     }
 }

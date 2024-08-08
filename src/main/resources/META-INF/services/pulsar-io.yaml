@@ -1,0 +1,4 @@
+name: sqs-source
+description: SQS Source Connector
+sourceClass: org.mansouri.connector.SqsSource
+sourceConfigClass: org.mansouri.connector.SqsSourceConfig

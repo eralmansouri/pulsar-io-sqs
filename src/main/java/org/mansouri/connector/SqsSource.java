@@ -1,6 +1,5 @@
 package org.mansouri.connector;
 
-import org.apache.pulsar.io.aws.AbstractAwsConnector;
 import org.apache.pulsar.io.core.PushSource;
 import org.apache.pulsar.io.core.SourceContext;
 import org.apache.pulsar.io.core.annotations.Connector;
@@ -12,13 +11,13 @@ import java.util.Map;
     name = "sqs-source",
     type = IOType.SOURCE,
     help = "A source connector that copies messages from Amazon SQS to Pulsar",
-    configClass = SQSSourceConfig.class)
-public class SQSSource extends PushSource<String> {
-    private SQSMessageReceiver receiver;
+    configClass = SqsSourceConfig.class)
+public class SqsSource extends PushSource<String> {
+    private SqsMessageReceiver receiver;
 
     @Override
     public void open(Map<String, Object> configMap, SourceContext sourceContext) throws Exception {
-        receiver = new SQSMessageReceiver(SQSSourceConfig.load(configMap), this::consume);
+        receiver = new SqsMessageReceiver(SqsSourceConfig.load(configMap), this::consume);
         receiver.start();
     }
 
