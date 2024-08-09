@@ -6,11 +6,9 @@ import java.io.Serializable;
 import java.util.Map;
 import org.apache.pulsar.io.core.annotations.FieldDoc;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Data;
 
-@Getter
-@RequiredArgsConstructor
+@Data
 public class SqsSourceConfig implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -20,27 +18,27 @@ public class SqsSourceConfig implements Serializable {
         defaultValue = "",
         help = "Name of the SQS queue to consume messages from"
     )
-    private final String queueName;
+    private String queueName;
 
     @FieldDoc(
         required = false,
         defaultValue = "us-east-1",
         help = "AWS region of the SQS queue"
     )
-    private final String region;
+    private String region;
 
     @FieldDoc(
         required = false,
         defaultValue = "",
         help = "Fully-Qualified class name of implementation of AwsCredentialProviderPlugin.")
-    private final String awsCredentialPluginName;
+    private String awsCredentialPluginName;
 
     @FieldDoc(
         required = false,
         defaultValue = "",
         sensitive = true,
         help = "json-parameters to initialize `AwsCredentialsProviderPlugin`")
-    private final String awsCredentialPluginParam;
+    private String awsCredentialPluginParam;
 
     public static SqsSourceConfig load(Map<String, Object> map) throws IOException {
         ObjectMapper mapper = new ObjectMapper();

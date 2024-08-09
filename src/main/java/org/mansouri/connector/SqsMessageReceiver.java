@@ -8,27 +8,31 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 @Slf4j
 public class SqsMessageReceiver extends AbstractAwsConnector {
-    private final SqsSourceConfig config;
     private final Consumer<Record<String>> consumeFunction;
     private final ExecutorService executorService;
     private volatile boolean running;
     private final SqsClient sqsClient;
+    private final Map<String, String> queues;
 
     public SqsMessageReceiver(SqsSourceConfig config, Consumer<Record<String>> consumeFunction) {
-        this.config = config;
         this.consumeFunction = consumeFunction;
         this.executorService = Executors.newSingleThreadExecutor();
-        this.sqsClient = createSqsClient();
+        this.sqsClient = createSqsClient(config);
+        this.queues = resolveDestinations(config, sqsClient);
     }
 
     public void start() {
@@ -45,19 +49,25 @@ public class SqsMessageReceiver extends AbstractAwsConnector {
     private void run() {
         while (running) {
             try {
-                ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
-                    .queueUrl(config.getQueueName())
-                    .maxNumberOfMessages(10)
-                    .waitTimeSeconds(20)
-                    .build();
+                for (Map.Entry<String, String> queue : queues.entrySet()) {
+                    String queueName = queue.getKey();
+                    String queueUrl = queue.getValue();
+                    log.info("Consuming messages from queue: {}", queueName);
 
-                List<Message> messages = sqsClient.receiveMessage(receiveRequest).messages();
+                    ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
+                        .queueUrl(queueUrl)
+                        .maxNumberOfMessages(10)
+                        .waitTimeSeconds(20)
+                        .build();
 
-                for (Message message : messages) {
-                    consume(message);
-                    sqsClient.deleteMessage(builder -> builder
-                        .queueUrl(config.getQueueName())
-                        .receiptHandle(message.receiptHandle()));
+                    List<Message> messages = sqsClient.receiveMessage(receiveRequest).messages();
+
+                    for (Message message : messages) {
+                        consume(queueName, message);
+                        sqsClient.deleteMessage(builder -> builder
+                            .queueUrl(queueUrl)
+                            .receiptHandle(message.receiptHandle()));
+                    }
                 }
             } catch (Exception e) {
                 log.error("Error processing SQS messages", e);
@@ -65,12 +75,12 @@ public class SqsMessageReceiver extends AbstractAwsConnector {
         }
     }
 
-    private void consume(Message message) {
+    private void consume(String queueName, Message message) {
         log.info("Consuming message. Id: {}", message.messageId());
-        consumeFunction.accept(new SqsRecord(config.getQueueName(), message));
+        consumeFunction.accept(new SqsRecord(queueName, message));
     }
 
-    private AwsCredentialsProvider createV2CredentialProvider() {
+    private AwsCredentialsProvider createV2CredentialProvider(SqsSourceConfig config) {
         try {
             AwsCredentialProviderPlugin credPlugin =
                 createCredentialProvider(config.getAwsCredentialPluginName(), config.getAwsCredentialPluginParam());
@@ -82,10 +92,21 @@ public class SqsMessageReceiver extends AbstractAwsConnector {
         }
     }
 
-    private SqsClient createSqsClient() {
+    private SqsClient createSqsClient(SqsSourceConfig config) {
         return SqsClient.builder()
-            .credentialsProvider(createV2CredentialProvider())
+            .credentialsProvider(createV2CredentialProvider(config))
             .region(Region.of(config.getRegion()))
             .build();
+    }
+
+    // For now we only support one queue but we can extend this to support multiple queues
+    private static Map<String, String> resolveDestinations(SqsSourceConfig config, SqsClient client) {
+        Map<String, String> queues = new HashMap<>();
+        for (String queueName : List.of(config.getQueueName())) {
+            GetQueueUrlResponse response =
+                client.getQueueUrl(req -> req.queueName(queueName));
+            queues.put(config.getQueueName(), response.queueUrl());
+        }
+        return queues;
     }
 }
