@@ -2,7 +2,7 @@
 
 This is an Amazon SQS source connector for Apache Pulsar. It allows you to consume messages from an SQS queue and publish them to a Pulsar topic.
 
-I created it as an alternative to StreamNative's [AWS SQS Connector](https://github.com/streamnative/pulsar-io-sqs), which seems to have been deleted or become closed-source. A dick move considering they're still featured on [Apache Pulsar's Ecosystem page](https://pulsar.apache.org/ecosystem/). 
+I created it as an alternative to StreamNative's [AWS SQS Connector](https://github.com/streamnative/pulsar-io-sqs), which seems to have been deleted or became closed-source (a dick move considering they were featured on [Apache Pulsar's Ecosystem page](https://pulsar.apache.org/ecosystem/)). 
 
 ## Building the connector
 
@@ -19,7 +19,7 @@ This will create a NAR file in the `target/` directory.
 Create a configuration file (e.g., `sqs-source-config.yaml`) with the following content:
 ```yaml
 configs:
-  queueName: "https://sqs.{region}.amazonaws.com/{account-id}/{queue-name}"
+  queueName: "example-queue-name"
   region: "us-west-2"
   awsCredentialPluginParam:
     accessKey: "secret"
@@ -29,7 +29,7 @@ configs:
 You can also configure the connector to use an IAM role for accessing the SQS queue. To do this, use the following configuration:
 ```yaml
 configs:
-  queueName: "https://sqs.{region}.amazonaws.com/{account-id}/{queue-name}"
+  queueName: "example-queue-name"
   region: "us-west-2"
   awsCredentialPluginName: "org.apache.pulsar.io.aws.STSAssumeRoleProviderPlugin"
   awsCredentialPluginParam:
@@ -37,7 +37,8 @@ configs:
     roleSessionName: "pulsar-io-sqs-source"
 ```
 
-Replace the placeholders with your actual SQS queue URL, region, and IAM role ARN.
+if no credentials are provided, the connector will use the [default AWS credentials provider chain](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default) to access the SQS queue.
+Replace the placeholders with your actual SQS queue name, region, and IAM role ARN. The connector will retrieve the queue URL from the SQS service and use it to consume messages.
 
 ## Using the connector
 
