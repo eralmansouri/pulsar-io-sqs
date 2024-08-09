@@ -5,6 +5,7 @@ import org.apache.pulsar.io.aws.AbstractAwsConnector;
 import org.apache.pulsar.io.aws.AwsCredentialProviderPlugin;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -70,9 +71,15 @@ public class SqsMessageReceiver extends AbstractAwsConnector {
     }
 
     private AwsCredentialsProvider createV2CredentialProvider() {
-        AwsCredentialProviderPlugin credPlugin =
-            createCredentialProvider(config.getAwsCredentialPluginName(), config.getAwsCredentialPluginParam());
-        return credPlugin.getV2CredentialsProvider();
+        try {
+            AwsCredentialProviderPlugin credPlugin =
+                createCredentialProvider(config.getAwsCredentialPluginName(), config.getAwsCredentialPluginParam());
+            return credPlugin.getV2CredentialsProvider();
+        }
+        catch (Exception e) {
+            log.error("Error creating credential provider. Using DefaultCredentialProvider instead.", e);
+            return DefaultCredentialsProvider.create();
+        }
     }
 
     private SqsClient createSqsClient() {

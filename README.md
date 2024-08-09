@@ -9,10 +9,10 @@ I created it as an alternative to StreamNative's [AWS SQS Connector](https://git
 To build the connector, run the following command in the project root directory:
 
 ```
-./gradlew clean build
+mvn clean package
 ```
 
-This will create a JAR file in the `build/libs` directory.
+This will create a NAR file in the `target/` directory.
 
 ## Configuring the connector
 
@@ -43,14 +43,14 @@ Replace the placeholders with your actual SQS queue URL, region, and IAM role AR
 
 To use this connector in your Pulsar instance:
 
-1. Copy the JAR file to the Pulsar connectors directory.
+1. Copy the NAR file to the Pulsar connectors directory.
 2. Create the configuration file as described above.
 3. Start the connector using the Pulsar admin CLI:
 
 ```
 bin/pulsar-admin sources create \
   --name sqs-source \
-  --archive /path/to/pulsar-io-sqs-source.jar \
+  --archive /path/to/pulsar-io-sqs-source.nar \
   --classname org.mansouri.connector.SqsSource \
   --tenant public \
   --namespace default \
@@ -59,3 +59,7 @@ bin/pulsar-admin sources create \
 ```
 
 The connector will start consuming messages from the specified SQS queue and publish them to the Pulsar topic.
+
+## Limitations
+
+This connector does not currently have support for FIFO, batch acknowledgement or message deduplication. It also has some hard coded values for wait time and visibility timeout that is not configurable. It is a very basic implementation that is not suitable for production use.
