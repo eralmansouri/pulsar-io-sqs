@@ -51,11 +51,10 @@ To use this connector in your Pulsar instance:
 ```
 bin/pulsar-admin sources create \
   --name sqs-source \
-  --archive /path/to/pulsar-io-sqs-source.nar \
-  --classname org.mansouri.connector.SqsSource \
-  --tenant public \
-  --namespace default \
-  --destination-topic-name sqs-messages \
+  --source-type sqs-source \
+  --tenant staging \
+  --namespace product-name \
+  --destination-topic-name persistent://staging/product-name/sqs-messages \
   --source-config-file sqs-source-config.yaml
 ```
 
