@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
-class SqsSourceConfigTest {
+class SqsConfigTest {
     @Test
     @DisplayName("Load standard JSON config")
     void loadJsonConfig() throws Exception {
@@ -24,11 +24,11 @@ class SqsSourceConfigTest {
         """;
 
         // Test that we can load the config from a JSON string
-        SqsSourceConfig directLoad = SqsSourceConfig.load(json);
+        SqsConfig directLoad = SqsConfig.load(json);
 
         // Test that we can use object mapper to automatically
         // call SqsSourceConfig.load() on the JSON string
-        SqsSourceConfig config = new ObjectMapper().readValue(json, SqsSourceConfig.class);
+        SqsConfig config = new ObjectMapper().readValue(json, SqsConfig.class);
 
         // Test that the direct load and the object mapper load are the same
         assertEquals(directLoad, config);
@@ -52,12 +52,12 @@ class SqsSourceConfigTest {
           secretKey: "secret"
         """;
 
-        SqsSourceConfig directLoad = SqsSourceConfig.load(yaml);
+        SqsConfig directLoad = SqsConfig.load(yaml);
 
         // Test that we can use object mapper to automatically
         // call SqsSourceConfig.load() on the YAML string
-        SqsSourceConfig config = new ObjectMapper(new YAMLFactory())
-            .readValue(yaml, SqsSourceConfig.class);
+        SqsConfig config = new ObjectMapper(new YAMLFactory())
+            .readValue(yaml, SqsConfig.class);
 
         // Test that the direct load and the object mapper load are the same
         assertEquals(directLoad, config);
@@ -93,8 +93,8 @@ class SqsSourceConfigTest {
         }
         """;
 
-        var config = SqsSourceConfig.load(json);
+        var config = SqsConfig.load(json);
         assertEquals("{\"accessKey\":\"secret\",\"secretKey\":\"secret\"}", config.getAwsCredentialPluginParam());
-        assertEquals(config, SqsSourceConfig.load(stringifiedJson));
+        assertEquals(config, SqsConfig.load(stringifiedJson));
     }
 }

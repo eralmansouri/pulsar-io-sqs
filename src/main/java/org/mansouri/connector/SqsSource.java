@@ -11,13 +11,13 @@ import java.util.Map;
     name = "sqs-source",
     type = IOType.SOURCE,
     help = "A source connector that copies messages from Amazon SQS to Pulsar",
-    configClass = SqsSourceConfig.class)
+    configClass = SqsConfig.class)
 public class SqsSource extends PushSource<String> {
     private SqsMessageReceiver receiver;
 
     @Override
     public void open(Map<String, Object> configMap, SourceContext sourceContext) throws Exception {
-        receiver = new SqsMessageReceiver(SqsSourceConfig.load(configMap), this::consume);
+        receiver = new SqsMessageReceiver(SqsConfig.load(configMap), this::consume);
         receiver.start();
     }
 
@@ -27,4 +27,5 @@ public class SqsSource extends PushSource<String> {
             receiver.stop();
         }
     }
+
 }

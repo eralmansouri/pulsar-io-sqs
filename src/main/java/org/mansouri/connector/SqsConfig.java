@@ -14,12 +14,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 
 @Data
 @Builder
-public class SqsSourceConfig implements Serializable {
+public class SqsConfig implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -51,8 +49,8 @@ public class SqsSourceConfig implements Serializable {
     private final String awsCredentialPluginParam;
 
     @JsonCreator
-    public static SqsSourceConfig load(Map<String, Object> map) {
-        var builder = SqsSourceConfig.builder();
+    public static SqsConfig load(Map<String, Object> map) {
+        var builder = SqsConfig.builder();
         var conf = createParser(map);
         conf.accept("queueName", builder::queueName);
         conf.accept("region", builder::region);
@@ -61,7 +59,7 @@ public class SqsSourceConfig implements Serializable {
         return builder.build();
     }
 
-    public static SqsSourceConfig load(String yaml) throws IOException {
+    public static SqsConfig load(String yaml) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         return load(objectMapper.readValue(yaml, new TypeReference<Map<String, Object>>() {}));
     }

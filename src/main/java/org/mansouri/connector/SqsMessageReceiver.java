@@ -8,7 +8,6 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
@@ -28,7 +27,7 @@ public class SqsMessageReceiver extends AbstractAwsConnector {
     private final SqsClient sqsClient;
     private final Map<String, String> queues;
 
-    public SqsMessageReceiver(SqsSourceConfig config, Consumer<Record<String>> consumeFunction) {
+    public SqsMessageReceiver(SqsConfig config, Consumer<Record<String>> consumeFunction) {
         this.consumeFunction = consumeFunction;
         this.executorService = Executors.newSingleThreadExecutor();
         this.sqsClient = createSqsClient(config);
@@ -80,7 +79,7 @@ public class SqsMessageReceiver extends AbstractAwsConnector {
         consumeFunction.accept(new SqsRecord(queueName, message));
     }
 
-    private AwsCredentialsProvider createV2CredentialProvider(SqsSourceConfig config) {
+    private AwsCredentialsProvider createV2CredentialProvider(SqsConfig config) {
         try {
             AwsCredentialProviderPlugin credPlugin =
                 createCredentialProvider(config.getAwsCredentialPluginName(), config.getAwsCredentialPluginParam());
@@ -92,7 +91,7 @@ public class SqsMessageReceiver extends AbstractAwsConnector {
         }
     }
 
-    private SqsClient createSqsClient(SqsSourceConfig config) {
+    private SqsClient createSqsClient(SqsConfig config) {
         return SqsClient.builder()
             .credentialsProvider(createV2CredentialProvider(config))
             .region(Region.of(config.getRegion()))
@@ -100,7 +99,7 @@ public class SqsMessageReceiver extends AbstractAwsConnector {
     }
 
     // For now we only support one queue but we can extend this to support multiple queues
-    private static Map<String, String> resolveDestinations(SqsSourceConfig config, SqsClient client) {
+    private static Map<String, String> resolveDestinations(SqsConfig config, SqsClient client) {
         Map<String, String> queues = new HashMap<>();
         for (String queueName : List.of(config.getQueueName())) {
             GetQueueUrlResponse response =

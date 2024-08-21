@@ -37,7 +37,7 @@ configs:
     roleSessionName: "pulsar-io-sqs-source"
 ```
 
-if no credentials are provided, the connector will use the [default AWS credentials provider chain](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default) to access the SQS queue.
+If no (or invalid) credentials are provided, the connector will use the [default AWS credentials provider chain](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default) to access the SQS queue.
 Replace the placeholders with your actual SQS queue name, region, and IAM role ARN. The connector will retrieve the queue URL from the SQS service and use it to consume messages.
 
 ## Using the connector
@@ -59,7 +59,3 @@ bin/pulsar-admin sources create \
 ```
 
 The connector will start consuming messages from the specified SQS queue and publish them to the Pulsar topic.
-
-## Limitations
-
-This connector does not currently have support for FIFO, batch acknowledgement or message deduplication. It also has some hard coded values for wait time and visibility timeout that is not configurable. It is a very basic implementation that is not suitable for production use.
