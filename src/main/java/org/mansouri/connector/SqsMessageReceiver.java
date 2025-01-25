@@ -10,6 +10,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
 import java.util.HashMap;
@@ -57,6 +58,7 @@ public class SqsMessageReceiver extends AbstractAwsConnector {
                         .queueUrl(queueUrl)
                         .maxNumberOfMessages(10)
                         .waitTimeSeconds(20)
+                        .attributeNames(QueueAttributeName.ALL)
                         .build();
 
                     List<Message> messages = sqsClient.receiveMessage(receiveRequest).messages();

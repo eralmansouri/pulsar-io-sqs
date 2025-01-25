@@ -2,6 +2,7 @@ package org.mansouri.connector;
 
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -15,7 +16,7 @@ public class SqsRecord implements Record<String> {
     private final Map<String, String> properties;
 
     public SqsRecord(String queueName, Message record) {
-        this.properties = record.attributesAsStrings();
+        this.properties = new HashMap<>(record.attributesAsStrings());
         this.messageId = record.messageId();
         this.queueName = queueName;
         this.value = record.body();
